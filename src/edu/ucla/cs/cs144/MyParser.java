@@ -203,8 +203,7 @@ class MyParser {
 				for(int j = 0; j < categoryList.length; j++){
 					Element category = categoryList[j];
 					String cat = getElementText(category );
-					//writer.append();
-					writer.append("&&&SCHMLEK"+itemID + ',' + cat + '\n');
+					writer.append("&&&SCHMLEK"+ "\"" + itemID + "\"" + ',' + "\"" + cat + "\"" + '\n');
 
 				}//end for
 				
@@ -219,6 +218,7 @@ class MyParser {
 				String nobids = item.getElementsByTagName("Number_of_Bids").item(0).getTextContent();
 				String first = item.getElementsByTagName("First_Bid").item(0).getTextContent();
 				String location = item.getElementsByTagName("Location").item(0).getTextContent();
+				location = location.replace("\"", "");
 				String lat = "";
 				if(item.getElementsByTagName("Latitude").item(0) != null){
 					lat = item.getElementsByTagName("Latitude").item(0).getTextContent();
@@ -234,14 +234,18 @@ class MyParser {
 				if(desc.length() > 4000){
 					desc = desc.substring(0, 4000);
 				}
-				Element n_userid = (Element) item.getElementsByTagName("Seller").item(0);
-				String userid = n_userid.getAttribute("UserID");
+				desc = desc.replace("\"", "");
+				/*Element n_userid = (Element) item.getElementsByTagName("Seller").item(0);
+				String userid = n_userid.getAttribute("UserID");*/
+				
+				Element seller = getElementByTagNameNR(item, "Seller");
+				String userid = seller.getAttribute("UserID");
 				
 				
-				writer.append("%%%SCHMLEK"+itemID + ','+name+','+buy_price+','+strip(currently)+','+nobids+','+strip(first)+','+location+
-						','+lat+','+longi+','+country+','+started+','+ends+','+"\""+desc+"\""+','+userid+'\n');
+				writer.append("%%%SCHMLEK"+ itemID + ','+ "\"" + name+ "\"" + ','+ "\"" + buy_price+ "\"" + ','+ "\"" + strip(currently)+ "\"" + ','+ "\"" + nobids+ "\"" + ','+ "\"" + strip(first)+ "\"" + ','+ "\"" + location+ "\"" +
+						','+ "\"" + lat + "\"" +','+ "\"" + longi+ "\"" + ','+ "\"" + country+ "\"" + ','+ "\"" + started+ "\"" + ','+ "\"" + ends+ "\"" + ','+"\""+desc+"\""+','+ "\"" + userid+ "\"" + '\n');
 				
-				//build the Bids add Users Table
+				//build the Bids and Users Table
 				//ArrayList<User> userList = new ArrayList<User>();
 				
 				NodeList bidlist = item.getElementsByTagName("Bid");
@@ -253,8 +257,9 @@ class MyParser {
 					String s_time = bid.getElementsByTagName("Time").item(0).getTextContent();
 					Date in_date = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(s_time);
 					String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_date);
-					String amt = bid.getElementsByTagName("Amount").item(0).getTextContent();
-					writer.append("###SCHMLEK"+itemID+','+bidder_id+','+time+','+strip(amt)+'\n');
+					//String amt = bid.getElementsByTagName("Amount").item(0).getTextContent();
+					String amt = getElementText(getElementByTagNameNR(bid, "Amount"));
+					writer.append("###SCHMLEK"+ itemID+ ','+ "\"" + bidder_id+ "\"" + ','+ time + ','+ "\"" + strip(amt)+ "\"" + '\n');
 					
 					boolean flag = false;
 					for(int y = 0; y < _UserList.size(); y++){
@@ -286,15 +291,58 @@ class MyParser {
 					}
 
 					
-				}
+				}//end users and bids for loop
 				
+				
+				//try using their functions
+				/*Element[] bids = getElementsByTagNameNR(getElementByTagNameNR(item, "Bids"), "Bid");
+				for(int j = 0; i < bids.length; i++){
+					Element bidder = getElementByTagNameNR(bids[j], "Bidder");
+					String bidder_id = bidder.getAttribute("UserID");
+					String b_rating = bidder.getAttribute("Rating");
+					String s_time = getElementTextByTagNameNR(bids[j], "Time");
+					Date in_date = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(s_time);
+					String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_date);
+					String amt = strip(getElementTextByTagNameNR(bids[j], "Amount"));
+					writer.append("###SCHMLEK"+ itemID+ ','+ "\"" + bidder_id+ "\"" + ','+ time + ','+ "\"" + amt+ "\"" + '\n');
+					
+					boolean flag = false;
+					for(int y = 0; y < _UserList.size(); y++){
+			    		if(_UserList.get(y).user_id.equals(bidder_id)){
+			    			User new_user = _UserList.get(y);
+							new_user.bid_rating = b_rating;
+							if(getElementByTagNameNR(bidder, "Location") != null){
+								new_user.location = "\"" + getElementText(getElementByTagNameNR(bidder, "Location")) + "\"";
+							}
+							if(getElementByTagNameNR(bidder, "Country") != null){
+								new_user.country = "\"" + getElementText(getElementByTagNameNR(bidder, "Country")) + "\"";
+							}
+			    			_UserList.set(y, new_user);
+			    			
+			    			flag = true;
+			    		}
+			    	}
+					
+					if(!flag){ //no user was encountered, create new one and add to list
+						User new_user = new User();
+						new_user.user_id = bidder_id;
+						new_user.bid_rating = b_rating;
+						if(getElementByTagNameNR(bidder, "Location") != null){
+							new_user.location = "\"" + getElementText(getElementByTagNameNR(bidder, "Location")) + "\"";
+						}
+						if(getElementByTagNameNR(bidder, "Country") != null){
+							new_user.country = "\"" + getElementText(getElementByTagNameNR(bidder, "Country")) + "\"";
+						}
+						_UserList.add(new_user);
+					}
+				}*/
 				
 				boolean flag = false;
 				//seller
 				for(int y = 0; y < _UserList.size(); y++){
 		    		if(_UserList.get(y).user_id.equals(userid)){
 		    			User new_user = _UserList.get(y);
-		    			new_user.sell_rating = n_userid.getAttribute("Rating");
+		    			new_user.sell_rating = seller.getAttribute("Rating");
 		    			_UserList.set(y, new_user);
 		    			flag = true;
 		    		}
@@ -302,7 +350,7 @@ class MyParser {
 				if(!flag){ //no user was encountered, create new one and add to list
 					User new_user = new User();
 					new_user.user_id = userid;
-					new_user.sell_rating = n_userid.getAttribute("Rating");
+					new_user.sell_rating = seller.getAttribute("Rating");
 					_UserList.add(new_user);
 				}
 				
@@ -367,8 +415,8 @@ class MyParser {
 	        }
 	        //finally flush all the users out
 	        for(User user : _UserList){
-				writer.append("^^^SCHMLEK"+user.user_id+','+user.bid_rating+','+user.sell_rating
-					+','+user.location+','+user.country+'\n');
+				writer.append("^^^SCHMLEK"+ user.user_id + ','+ user.bid_rating + ','+ user.sell_rating
+					+ ','+ user.location+ ','+ user.country+ '\n');
 			}
 	        writer.close();
 			
