@@ -26,6 +26,10 @@
 package edu.ucla.cs.cs144;
 
 import java.io.*;
+
+
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import java.text.*;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
@@ -203,38 +207,49 @@ class MyParser {
 				for(int j = 0; j < categoryList.length; j++){
 					Element category = categoryList[j];
 					String cat = getElementText(category );
-					writer.append("&&&SCHMLEK"+ "\"" + itemID + "\"" + ',' + "\"" + cat + "\"" + '\n');
+					writer.append("&&&SCHMLEK"+ "\"" + itemID + "\"" + "15141726b8946a6a909f1606a5d6cd822900d047" + "\"" + cat + "\"" + '\n');
 
 				}//end for
 				
 				
 				//build the Item Table
-				String name = item.getElementsByTagName("Name").item(0).getTextContent();
+				String name = StringEscapeUtils.escapeCsv(item.getElementsByTagName("Name").item(0).getTextContent());
 				String buy_price = "";
 				if(item.getElementsByTagName("Buy_Price").item(0) != null) {
 					buy_price = strip(item.getElementsByTagName("Buy_Price").item(0).getTextContent());
 				}
+				else{
+					buy_price = "0.00"; //to aviod warnings on MySQL
+				}
 				String currently= item.getElementsByTagName("Currently").item(0).getTextContent();
 				String nobids = item.getElementsByTagName("Number_of_Bids").item(0).getTextContent();
 				String first = item.getElementsByTagName("First_Bid").item(0).getTextContent();
-				String location = item.getElementsByTagName("Location").item(0).getTextContent();
-				location = location.replace("\"", "");
+				String location = StringEscapeUtils.escapeCsv(item.getElementsByTagName("Location").item(0).getTextContent());
+				
+				Element loc = (Element)item.getElementsByTagName("Location").item(0);
+				
 				String lat = "";
-				if(item.getElementsByTagName("Latitude").item(0) != null){
-					lat = item.getElementsByTagName("Latitude").item(0).getTextContent();
+				if(loc.getAttribute("Latitude") != null){
+					lat = loc.getAttribute("Latitude");
 				}
 				String longi = "";
-				if(item.getElementsByTagName("Longitude").item(0) != null){
-					longi = item.getElementsByTagName("Longitude").item(0).getTextContent();
+				if(loc.getAttribute("Longitude") != null){
+					longi = loc.getAttribute("Longitude");
 				}
-				String country = item.getElementsByTagName("Country").item(0).getTextContent();
+				String country = StringEscapeUtils.escapeCsv(item.getElementsByTagName("Country").item(0).getTextContent());
+				
 				String started = item.getElementsByTagName("Started").item(0).getTextContent();
 				String ends = item.getElementsByTagName("Ends").item(0).getTextContent();
+				Date in_date = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(started);
+				String starttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_date);
+				Date in_datetwo = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(ends);
+				String endtime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_datetwo);
 				String desc = item.getElementsByTagName("Description").item(0).getTextContent();
 				if(desc.length() > 4000){
 					desc = desc.substring(0, 4000);
 				}
-				desc = desc.replace("\"", "");
+				//desc = desc.replace("\"", "");
+				String descmod = StringEscapeUtils.escapeCsv(desc);
 				/*Element n_userid = (Element) item.getElementsByTagName("Seller").item(0);
 				String userid = n_userid.getAttribute("UserID");*/
 				
@@ -242,8 +257,8 @@ class MyParser {
 				String userid = seller.getAttribute("UserID");
 				
 				
-				writer.append("%%%SCHMLEK"+ itemID + ','+ "\"" + name+ "\"" + ','+ "\"" + buy_price+ "\"" + ','+ "\"" + strip(currently)+ "\"" + ','+ "\"" + nobids+ "\"" + ','+ "\"" + strip(first)+ "\"" + ','+ "\"" + location+ "\"" +
-						','+ "\"" + lat + "\"" +','+ "\"" + longi+ "\"" + ','+ "\"" + country+ "\"" + ','+ "\"" + started+ "\"" + ','+ "\"" + ends+ "\"" + ','+"\""+desc+"\""+','+ "\"" + userid+ "\"" + '\n');
+				writer.append("%%%SCHMLEK"+ itemID + "15141726b8946a6a909f1606a5d6cd822900d047"+ name + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + buy_price+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + strip(currently)+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + nobids+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + strip(first)+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ location +
+						"15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + lat + "\"" +"15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + longi+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ country + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + starttime+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + endtime+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+descmod+"15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + userid+ "\"" + '\n');
 				
 				//build the Bids and Users Table
 				//ArrayList<User> userList = new ArrayList<User>();
@@ -255,11 +270,11 @@ class MyParser {
 					String bidder_id = bidder.getAttribute("UserID");
 					String b_rating = bidder.getAttribute("Rating");
 					String s_time = bid.getElementsByTagName("Time").item(0).getTextContent();
-					Date in_date = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(s_time);
-					String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_date);
+					Date in_datebid = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(s_time);
+					String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_datebid);
 					//String amt = bid.getElementsByTagName("Amount").item(0).getTextContent();
 					String amt = getElementText(getElementByTagNameNR(bid, "Amount"));
-					writer.append("###SCHMLEK"+ itemID+ ','+ "\"" + bidder_id+ "\"" + ','+ time + ','+ "\"" + strip(amt)+ "\"" + '\n');
+					writer.append("###SCHMLEK"+ itemID+ "15141726b8946a6a909f1606a5d6cd822900d047" + "\"" + bidder_id+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ time + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + strip(amt)+ "\"" + '\n');
 					
 					boolean flag = false;
 					for(int y = 0; y < _UserList.size(); y++){
@@ -267,10 +282,10 @@ class MyParser {
 			    			User new_user = _UserList.get(y);
 							new_user.bid_rating = b_rating;
 							if(bidder.getElementsByTagName("Location").item(0) != null){
-								new_user.location = "\"" + bidder.getElementsByTagName("Location").item(0).getTextContent() + "\"";
+								new_user.location = StringEscapeUtils.escapeCsv(bidder.getElementsByTagName("Location").item(0).getTextContent());
 							}
 							if(bidder.getElementsByTagName("Country").item(0) != null){
-								new_user.country = "\"" + bidder.getElementsByTagName("Country").item(0).getTextContent() + "\"";
+								new_user.country = StringEscapeUtils.escapeCsv(bidder.getElementsByTagName("Country").item(0).getTextContent());
 							}
 			    			_UserList.set(y, new_user);
 			    			
@@ -282,10 +297,12 @@ class MyParser {
 						new_user.user_id = bidder_id;
 						new_user.bid_rating = b_rating;
 						if(bidder.getElementsByTagName("Location").item(0) != null){
-							new_user.location = "\"" + bidder.getElementsByTagName("Location").item(0).getTextContent() + "\"";
+							//String formattedlocation = bidder.getElementsByTagName("Location").item(0).getTextContent().replace("\"", "");
+							new_user.location = StringEscapeUtils.escapeCsv(bidder.getElementsByTagName("Location").item(0).getTextContent());
 						}
 						if(bidder.getElementsByTagName("Country").item(0) != null){
-							new_user.country = "\"" + bidder.getElementsByTagName("Country").item(0).getTextContent() + "\"";
+							//String formattedcountry = bidder.getElementsByTagName("Country").item(0).getTextContent().replace("\"", "");
+							new_user.country = StringEscapeUtils.escapeCsv(bidder.getElementsByTagName("Country").item(0).getTextContent());
 						}
 						_UserList.add(new_user);
 					}
@@ -304,7 +321,7 @@ class MyParser {
 					Date in_date = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").parse(s_time);
 					String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(in_date);
 					String amt = strip(getElementTextByTagNameNR(bids[j], "Amount"));
-					writer.append("###SCHMLEK"+ itemID+ ','+ "\"" + bidder_id+ "\"" + ','+ time + ','+ "\"" + amt+ "\"" + '\n');
+					writer.append("###SCHMLEK"+ itemID+ "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + bidder_id+ "\"" + "15141726b8946a6a909f1606a5d6cd822900d047"+ time + "15141726b8946a6a909f1606a5d6cd822900d047"+ "\"" + amt+ "\"" + '\n');
 					
 					boolean flag = false;
 					for(int y = 0; y < _UserList.size(); y++){
@@ -354,13 +371,6 @@ class MyParser {
 					_UserList.add(new_user);
 				}
 				
-				
-				/*for(User user : _UserList){
-					writer.append("^^^SCHMLEK"+user.user_id+','+user.bid_rating+','+user.sell_rating
-						+','+user.location+','+user.country+'\n');
-				}*/
-
-				
 				writer.flush();
 			}//end for
 			
@@ -381,6 +391,13 @@ class MyParser {
     }
     
     public static void main (String[] args) {
+    	
+    	/*for (int j = 0; j < 40; j++){
+    		System.out.print("items-" + j + ".xml ");
+    	}
+    	System.exit(0);*/
+    	
+    	
         if (args.length == 0) {
             System.out.println("Usage: java MyParser [file] [file] ...");
             System.exit(1);
@@ -415,8 +432,8 @@ class MyParser {
 	        }
 	        //finally flush all the users out
 	        for(User user : _UserList){
-				writer.append("^^^SCHMLEK"+ user.user_id + ','+ user.bid_rating + ','+ user.sell_rating
-					+ ','+ user.location+ ','+ user.country+ '\n');
+				writer.append("^^^SCHMLEK"+ user.user_id + "15141726b8946a6a909f1606a5d6cd822900d047"+ user.bid_rating + "15141726b8946a6a909f1606a5d6cd822900d047"+ user.sell_rating
+					+ "15141726b8946a6a909f1606a5d6cd822900d047" + user.location + "15141726b8946a6a909f1606a5d6cd822900d047" + user.country + '\n');
 			}
 	        writer.close();
 			
